@@ -1,8 +1,5 @@
 import { ORPCError } from "@orpc/client";
-import {
-  loginSchema,
-  signupSchema,
-} from "@/features/auth/types/auth-request.type";
+import { signupSchema } from "@/features/auth/types/auth-request.type";
 import { auth } from "@/lib/auth";
 import { publicProcedure } from "../lib/orpc";
 
