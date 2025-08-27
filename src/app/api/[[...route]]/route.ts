@@ -8,8 +8,9 @@ import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { timing } from "hono/timing";
 import { handle } from "hono/vercel";
+import { auth } from "@/lib/auth";
 import validationErrorInterceptor from "./commons/interceptors/error-validation.interceptor";
-// import { createContext } from "./lib/context";
+import { createContext } from "./lib/context";
 import { appRouter } from "./routers";
 
 export const runtime = "nodejs";
@@ -49,9 +50,14 @@ app.use("/rpc/*", async (c, next) => {
     },
   });
 
-  // const context = await createContext({ context: c });
+  const context = await createContext({ context: c });
   const { matched, response } = await handlerOrcp.handle(request, {
     prefix: "/api/rpc",
+    context: {
+      headers: context.headers,
+      session: context.session,
+      prisma: context.prisma,
+    },
   });
 
   if (matched) {
@@ -60,6 +66,8 @@ app.use("/rpc/*", async (c, next) => {
 
   await next();
 });
+
+app.on(["GET", "POST"], "/auth/*", (c) => auth.handler(c.req.raw));
 
 const handler = handle(app);
 
