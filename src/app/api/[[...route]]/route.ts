@@ -2,7 +2,6 @@ import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { csrf } from "hono/csrf";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
@@ -35,7 +34,6 @@ const app = new Hono().basePath("/api");
 
 app.use(logger());
 app.use("*", cors());
-app.use("*", csrf());
 app.use("*", prettyJSON());
 app.use("*", secureHeaders());
 app.use("*", timing());

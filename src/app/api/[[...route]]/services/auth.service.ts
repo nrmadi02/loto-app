@@ -11,26 +11,33 @@ export class AuthService {
   }
 
   async signUpEmail(input: SignupFormData) {
-    const { name, email, password, employeeId, department } = input;
+    try {
+      const { name, email, password, employeeId, department } = input;
 
-    const data = await auth.api.signUpEmail({
-      body: {
-        name,
-        email,
-        password,
-      },
-    });
+      const data = await auth.api.signUpEmail({
+        body: {
+          name,
+          email,
+          password,
+        },
+      });
 
-    if (!data.user) {
+      if (!data.user) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "User not created",
+        });
+      }
+
+      const employee = await this.ctx.prisma.employee.create({
+        data: { userId: data.user.id, employeeId, department },
+      });
+
+      return { user: data.user, employee };
+    } catch (error) {
+      console.error(error);
       throw new ORPCError("INTERNAL_SERVER_ERROR", {
         message: "User not created",
       });
     }
-
-    const employee = await this.ctx.prisma.employee.create({
-      data: { userId: data.user.id, employeeId, department },
-    });
-
-    return { user: data.user, employee };
   }
 }
