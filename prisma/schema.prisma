@@ -93,3 +93,71 @@ model Verification {
 
   @@map("verification")
 }
+
+enum MachineStatus {
+  OPERASIONAL
+  LOCKED_OUT
+  ZERO_OK
+  REPAIR
+}
+
+enum EnergyType {
+  ELECTRICAL
+  PNEUMATIC
+  HYDRAULIC
+  MECHANICAL
+  OTHER
+}
+
+
+model Machine {
+  id          String         @id @default(cuid())
+  code        String         @unique
+  name        String
+  location    String?
+  status      MachineStatus  @default(OPERASIONAL)
+  procedures  Json?                    
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  points      IsolationPoint[]
+  actions     ActionLog[]
+
+  @@index([status])
+
+  @@map("machine")
+}
+
+model IsolationPoint {
+  id          String     @id @default(cuid())
+  machineId   String
+  label       String               
+  energyType  EnergyType
+  details     String?
+
+  machine     Machine    @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@index([machineId])
+  @@unique([machineId, label])     
+
+  @@map("isolation_point")
+}
+
+model ActionLog {
+  id          String         @id @default(cuid())
+  machineId   String
+  fromStatus  MachineStatus
+  toStatus    MachineStatus
+  byName      String                    
+  at          DateTime       @default(now())
+  note        String?
+  photoUri    String?                    
+  payload     Json?                      
+
+  machine     Machine        @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@index([machineId, at])
+  @@index([toStatus])
+
+  @@map("action_log")
+}
