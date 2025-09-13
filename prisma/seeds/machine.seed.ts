@@ -12,6 +12,8 @@ export const machineSeed = async () => {
       location: "Area A",
       status: MachineStatus.OPERASIONAL,
       procedures: PROCEDURES,
+      description: "Pompa hidrolik untuk mengalirkan fluida",
+      lastActivity: new Date(),
       points: {
         create: [
           { label: "Main Breaker QF1", energyType: EnergyType.ELECTRICAL },
@@ -31,6 +33,8 @@ export const machineSeed = async () => {
       location: "Area B",
       status: MachineStatus.OPERASIONAL,
       procedures: PROCEDURES,
+      description: "Conveyor untuk mengalirkan bahan baku",
+      lastActivity: new Date(),
       points: {
         create: [
           { label: "Panel MCC-12", energyType: EnergyType.ELECTRICAL },
@@ -49,6 +53,8 @@ export const machineSeed = async () => {
       location: "Utility",
       status: MachineStatus.OPERASIONAL,
       procedures: PROCEDURES,
+      description: "Boiler uap untuk menghasilkan uap",
+      lastActivity: new Date(),
       points: {
         create: [
           { label: "Main Switch 400V", energyType: EnergyType.ELECTRICAL },
