@@ -45,27 +45,54 @@ function validateRequired(
   return errs;
 }
 
-function serializeFiles(values: Record<string, any>) {
-  // Demo only: transform File to metadata. Replace with real uploader.
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function serializeFiles(values: Record<string, any>) {
+  // Convert File objects to { name, type, size, dataUrl }
   const out: Record<string, any> = {};
-  for (const [k, v] of Object.entries(values)) {
-    if (v instanceof File)
-      out[k] = { name: v.name, size: v.size, type: v.type };
-    else if (typeof v === "object" && v && !Array.isArray(v)) {
+  const entries = Object.entries(values);
+  for (const [k, v] of entries) {
+    if (v instanceof File) {
+      out[k] = {
+        name: v.name,
+        size: v.size,
+        type: v.type,
+        dataUrl: await fileToDataUrl(v),
+      };
+    } else if (typeof v === "object" && v && !Array.isArray(v)) {
       const obj: Record<string, any> = {};
-      for (const [kk, vv] of Object.entries(v as any))
-        obj[kk] =
-          vv instanceof File
-            ? { name: vv.name, size: vv.size, type: vv.type }
-            : vv;
+      for (const [kk, vv] of Object.entries(v as any)) {
+        if (vv instanceof File) {
+          obj[kk] = {
+            name: vv.name,
+            size: vv.size,
+            type: vv.type,
+            dataUrl: await fileToDataUrl(vv),
+          };
+        } else obj[kk] = vv;
+      }
       out[k] = obj;
-    } else if (Array.isArray(v))
-      out[k] = v.map((it) =>
-        it instanceof File
-          ? { name: it.name, size: it.size, type: it.type }
-          : it,
+    } else if (Array.isArray(v)) {
+      out[k] = await Promise.all(
+        v.map(async (it) =>
+          it instanceof File
+            ? {
+                name: it.name,
+                size: it.size,
+                type: it.type,
+                dataUrl: await fileToDataUrl(it),
+              }
+            : it,
+        ),
       );
-    else out[k] = v;
+    } else out[k] = v;
   }
   return out;
 }
@@ -84,11 +111,14 @@ export default function DynamicForm({
   const setField = (id: string, v: any) =>
     setValues((s) => ({ ...s, [id]: v }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validateRequired(spec.fields, values);
     setErrors(errs);
-    if (errs.length === 0) onSubmit(serializeFiles(values));
+    if (errs.length === 0) {
+      const payload = await serializeFiles(values);
+      onSubmit(payload);
+    }
   };
 
   return (

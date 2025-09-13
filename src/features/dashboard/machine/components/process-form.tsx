@@ -1,7 +1,9 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 "use client";
 
 import type { MachineStatus } from "@prisma/client";
 import { Separator } from "@radix-ui/react-dropdown-menu";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   BadgeCheck,
@@ -11,7 +13,9 @@ import {
   Lock,
   Wrench,
 } from "lucide-react";
-import { type JSX, useState } from "react";
+import { useParams } from "next/navigation";
+import { type JSX, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { TransitionKey } from "@/app/api/[[...route]]/schema/loto.schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { orpc } from "@/lib/orpc";
 import { ALLOWED, PROCEDURES, SAMPLE_MACHINE } from "../types/machine.type";
 import DynamicForm from "./dynamic-form";
 
@@ -50,7 +55,7 @@ function TransitionPicker({
 }) {
   const targets = ALLOWED[from];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 gap-2">
       {targets.map((to) => (
         <Button
           key={to}
@@ -71,19 +76,67 @@ function TransitionPicker({
 }
 
 export default function ProcessForm() {
+  const params = useParams() as { id: string };
+  const machineId = params.id;
   const [machine, setMachine] = useState(SAMPLE_MACHINE);
-  const [transition, setTransition] = useState<TransitionKey>(
-    "OPERASIONAL->LOCKED_OUT",
+  const [transition, setTransition] = useState<TransitionKey | undefined>(
+    undefined,
   );
-  const spec = PROCEDURES[transition];
-  const [last, setLast] = useState<any | null>(null);
+  const spec = transition ? PROCEDURES[transition] : undefined;
 
-  const doSubmit = (payload: Record<string, any>) => {
-    setLast({ transition, outputStatus: spec.outputStatus, payload });
-    setMachine((m) => ({ ...m, status: spec.outputStatus as MachineStatus }));
-    const next = ALLOWED[spec.outputStatus as MachineStatus]?.[0];
-    if (next) setTransition(`${spec.outputStatus}->${next}` as TransitionKey);
+  const getMachineQuery = useQuery(
+    orpc.machine.getDetailMachine.queryOptions({
+      queryKey: ["machine", machineId],
+      input: machineId,
+      enabled: !!machineId,
+    }),
+  );
+
+  const transitionMutation = useMutation(
+    orpc.loto.transition.mutationOptions(),
+  );
+
+  const doSubmit = async (payload: Record<string, any>) => {
+    const to = transition?.split("->")[1];
+
+    try {
+      const result = await transitionMutation.mutateAsync({
+        machineId,
+        to: to as MachineStatus,
+        byName: "System",
+        note: "Transition via API",
+        payload,
+      });
+      console.log(result);
+      getMachineQuery.refetch();
+      toast.success("Transisi berhasil");
+
+      const next = ALLOWED[spec?.outputStatus as MachineStatus]?.[0];
+      if (next)
+        setTransition(`${spec?.outputStatus}->${next}` as TransitionKey);
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal transisi");
+    }
+
+    // setLast({ transition, outputStatus: spec.outputStatus, payload });
+    // setMachine((m) => ({ ...m, status: spec.outputStatus as MachineStatus }));
   };
+
+  useEffect(() => {
+    if (getMachineQuery.data) {
+      setMachine({
+        code: getMachineQuery.data.code,
+        name: getMachineQuery.data.name,
+        location: getMachineQuery.data.location ?? "",
+        status: getMachineQuery.data.status,
+        points: getMachineQuery.data.points,
+        id: getMachineQuery.data.id,
+      });
+    }
+  }, [getMachineQuery.data]);
+
+  if (getMachineQuery.isPending) return <div>Loading...</div>;
 
   return (
     <div className="py-8 pt-3">
@@ -156,37 +209,27 @@ export default function ProcessForm() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ClipboardCheck className="h-5 w-5" /> {spec.title}
+                  <ClipboardCheck className="h-5 w-5" /> {spec?.title}
                 </CardTitle>
                 <CardDescription>
                   Isi form sesuai prosedur untuk menerapkan status berikutnya.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DynamicForm
-                  spec={spec}
-                  machine={machine}
-                  onSubmit={doSubmit}
-                />
+                {transition && spec && (
+                  <DynamicForm
+                    spec={spec}
+                    machine={machine}
+                    onSubmit={doSubmit}
+                  />
+                )}
+                {!transition && (
+                  <div className="text-center text-sm text-primary">
+                    Pilih transisi terlebih dahulu
+                  </div>
+                )}
               </CardContent>
             </Card>
-
-            {last && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payload Terakhir (simulasi)</CardTitle>
-                  <CardDescription>
-                    Ini contoh data yang akan dikirim ke API
-                    /machines/:id/transition
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs rounded-lg bg-neutral-950 text-neutral-100 p-4 overflow-auto">
-                    {JSON.stringify(last, null, 2)}
-                  </pre>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>

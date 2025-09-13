@@ -166,7 +166,12 @@ export const PROCEDURES: Record<TransitionKey, FormSpec> = {
             options: ["Voltage", "Pressure", "Temperature", "Other"],
             placeholder: "Pilih parameter",
           },
-          { id: "value", label: "Nilai", type: "number", placeholder: "Nilai ukur" },
+          {
+            id: "value",
+            label: "Nilai",
+            type: "number",
+            placeholder: "Nilai ukur",
+          },
           {
             id: "unit",
             label: "Unit",
@@ -298,17 +303,17 @@ export const PROCEDURES: Record<TransitionKey, FormSpec> = {
         placeholder: "Nama lengkap petugas",
       },
       {
+        id: "allLocksRemoved",
+        label: "Semua lock & tag sudah dilepas",
+        type: "boolean",
+        required: true,
+      },
+      {
         id: "reasonCancel",
         label: "Alasan pembatalan",
         type: "textarea",
         required: true,
         placeholder: "Contoh: Pekerjaan ditunda, mesin dibutuhkan",
-      },
-      {
-        id: "allLocksRemoved",
-        label: "Semua lock & tag sudah dilepas",
-        type: "boolean",
-        required: true,
       },
     ],
     outputStatus: "OPERASIONAL",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle,
@@ -20,77 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { orpc } from "@/lib/orpc";
 import FilterMachine from "./filter-machine";
-
-const machines = [
-  {
-    id: "M001",
-    code: "P-101",
-    name: "Pompa Sentrifugal P-101",
-    location: "Unit Produksi A",
-    status: "OPERASIONAL",
-    lastActivity: "2 jam yang lalu",
-    operator: "Ahmad Rizki",
-    isolationPoints: 3,
-    description:
-      "Pompa untuk transfer crude oil dari tangki storage ke unit distilasi",
-  },
-  {
-    id: "M002",
-    code: "K-201",
-    name: "Kompresor K-201",
-    location: "Unit Produksi B",
-    status: "LOCKED_OUT",
-    lastActivity: "4 jam yang lalu",
-    operator: "Siti Nurhaliza",
-    isolationPoints: 5,
-    description: "Kompresor udara untuk sistem pneumatik unit produksi",
-  },
-  {
-    id: "M003",
-    code: "HE-301",
-    name: "Heat Exchanger HE-301",
-    location: "Unit Produksi C",
-    status: "ZERO_OK",
-    lastActivity: "6 jam yang lalu",
-    operator: "Budi Santoso",
-    isolationPoints: 2,
-    description: "Heat exchanger untuk pendinginan produk akhir",
-  },
-  {
-    id: "M004",
-    code: "T-401",
-    name: "Tangki Storage T-401",
-    location: "Area Storage",
-    status: "REPAIR",
-    lastActivity: "1 hari yang lalu",
-    operator: "Dewi Sartika",
-    isolationPoints: 4,
-    description: "Tangki penyimpanan bahan baku dengan kapasitas 10,000 liter",
-  },
-  {
-    id: "M005",
-    code: "R-501",
-    name: "Reaktor R-501",
-    location: "Unit Produksi A",
-    status: "OPERASIONAL",
-    lastActivity: "2 hari yang lalu",
-    operator: "Eko Prasetyo",
-    isolationPoints: 8,
-    description: "Reaktor utama untuk proses katalitik cracking",
-  },
-  {
-    id: "M006",
-    code: "F-601",
-    name: "Furnace F-601",
-    location: "Unit Produksi B",
-    status: "OPERASIONAL",
-    lastActivity: "3 hari yang lalu",
-    operator: "Maya Sari",
-    isolationPoints: 6,
-    description: "Furnace untuk pemanasan awal dalam proses distilasi",
-  },
-];
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -157,11 +89,18 @@ const getStatusConfig = (status: string) => {
 };
 
 export default function ListMachine() {
+  const { data, isPending } = useQuery(
+    orpc.machine.listMachines.queryOptions({
+      queryKey: ["machines"],
+    }),
+  );
+
   return (
     <div className="space-y-6">
       <FilterMachine />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {machines.map((machine) => {
+        {isPending && <p>Loading...</p>}
+        {data?.map((machine) => {
           const statusConfig = getStatusConfig(machine.status);
           return (
             <Card
@@ -203,13 +142,13 @@ export default function ListMachine() {
                   <div className="flex items-center gap-2">
                     <Settings className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      {machine.isolationPoints} titik isolasi
+                      {machine.location} titik isolasi
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      {machine.lastActivity}
+                      {machine.lastActivity?.toLocaleString()}
                     </span>
                   </div>
                 </div>
