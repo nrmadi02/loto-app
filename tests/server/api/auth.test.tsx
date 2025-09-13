@@ -79,7 +79,7 @@ describe("authRouter.signUp via fake handler (forward to real)", () => {
     await expect(
       call(authRouter.signUp, input, {
         context: { prisma: prismaTest, session: null, headers: new Headers() },
-      })
+      }),
     ).rejects.toThrow("User not created");
 
     expect(await prismaTest.employee.count()).toBe(0);

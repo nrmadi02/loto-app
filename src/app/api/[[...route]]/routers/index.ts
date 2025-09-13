@@ -1,11 +1,11 @@
-import z from "zod";
-import { UTApi, UTFile } from "uploadthing/server";
-import { ORPCError } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
+import { ORPCError } from "@orpc/server";
+import { UTApi, UTFile } from "uploadthing/server";
+import z from "zod";
 import { publicProcedure } from "../lib/orpc";
 import { authRouter } from "./auth.router";
-import { machineRouter } from "./machine.router";
 import { lotoRouter } from "./loto.router";
+import { machineRouter } from "./machine.router";
 
 const utapi = new UTApi();
 
@@ -55,4 +55,3 @@ export const appRouter = {
 
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
-

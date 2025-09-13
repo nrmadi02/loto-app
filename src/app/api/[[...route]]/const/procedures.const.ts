@@ -97,7 +97,12 @@ export const PROCEDURES = {
             options: ["Voltage", "Pressure", "Temperature", "Other"],
             placeholder: "Pilih parameter",
           },
-          { id: "value", label: "Nilai", type: "number", placeholder: "Nilai ukur" },
+          {
+            id: "value",
+            label: "Nilai",
+            type: "number",
+            placeholder: "Nilai ukur",
+          },
           {
             id: "unit",
             label: "Unit",

@@ -188,7 +188,8 @@ export class LotoService {
               });
               const uploaded = (result as any)?.data?.data;
               const url =
-                (uploaded && (uploaded.ufsUrl || uploaded.url || uploaded.appUrl)) ||
+                (uploaded &&
+                  (uploaded.ufsUrl || uploaded.url || uploaded.appUrl)) ||
                 "";
               uriMap.set(f.path, url);
             } else {

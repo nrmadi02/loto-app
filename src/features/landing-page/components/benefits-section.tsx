@@ -61,8 +61,8 @@ export function BenefitsSection() {
                   {benefit.metric !== "0" && benefit.metric !== "99%"
                     ? ""
                     : benefit.metric === "0"
-                    ? " Kecelakaan"
-                    : ""}
+                      ? " Kecelakaan"
+                      : ""}
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-3">
                   {benefit.title}
