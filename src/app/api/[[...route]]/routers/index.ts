@@ -1,1 +1,58 @@
-import { ORPCError, type RouterClient } from "@orpc/server";\nimport { UTApi, UTFile } from "uploadthing/server";\nimport z from "zod";\nimport { publicProcedure } from "../lib/orpc";\nimport { authRouter } from "./auth.router";\nimport { lotoRouter } from "./loto.router";\nimport { machineRouter } from "./machine.router";\n\nconst utapi = new UTApi();\n\nexport const appRouter = {\n  healthCheck: publicProcedure.handler(() => {\n    return {\n      status: "ok",\n    };\n  }),\n  auth: authRouter,\n  upload: publicProcedure\n    .input(\n      z.object({\n        file: z.object({\n          name: z.string().min(1),\n          dataUrl: z.string().min(1),\n        }),\n      }),\n    )\n    .handler(async ({ input }) => {\n      try {\n        // Expect data URL: data:<mime>;base64,<data>\n        const { name, dataUrl } = input.file;\n        const match = /^data:([^;]+);base64,/.exec(dataUrl);\n        const mime = match?.[1] || "application/octet-stream";\n        const commaIdx = dataUrl.indexOf(",");\n        const base64 = commaIdx >= 0 ? dataUrl.slice(commaIdx + 1) : dataUrl;\n        const buffer = Buffer.from(base64, "base64");\n        const file = new UTFile([buffer], name, { type: mime });\n        const result = await utapi.uploadFiles(file);\n\n        console.log(result);\n        return {\n          status: "success",\n          data: result,\n        };\n      } catch (error) {\n        console.error(error);\n        throw new ORPCError("INTERNAL_SERVER_ERROR", {\n          message: "Gagal mengunggah file",\n        });\n      }\n    }),\n  loto: lotoRouter,\n  machine: machineRouter,\n};\n\nexport type AppRouter = typeof appRouter;\nexport type AppRouterClient = RouterClient<typeof appRouter>;\n
+import z from "zod";
+import { UTApi, UTFile } from "uploadthing/server";
+import { ORPCError } from "@orpc/server";
+import type { RouterClient } from "@orpc/server";
+import { publicProcedure } from "../lib/orpc";
+import { authRouter } from "./auth.router";
+import { machineRouter } from "./machine.router";
+import { lotoRouter } from "./loto.router";
+
+const utapi = new UTApi();
+
+export const appRouter = {
+  healthCheck: publicProcedure.handler(() => {
+    return {
+      status: "ok",
+    };
+  }),
+  auth: authRouter,
+  machine: machineRouter,
+  loto: lotoRouter,
+  upload: publicProcedure
+    .input(
+      z.object({
+        file: z.object({
+          name: z.string().min(1),
+          dataUrl: z.string().min(1),
+        }),
+      }),
+    )
+    .handler(async ({ input }) => {
+      try {
+        // Expect data URL: data:<mime>;base64,<data>
+        const { name, dataUrl } = input.file;
+        const match = /^data:([^;]+);base64,/.exec(dataUrl);
+        const mime = match?.[1] || "application/octet-stream";
+        const commaIdx = dataUrl.indexOf(",");
+        const base64 = commaIdx >= 0 ? dataUrl.slice(commaIdx + 1) : dataUrl;
+        const buffer = Buffer.from(base64, "base64");
+        const file = new UTFile([buffer], name, { type: mime });
+        const result = await utapi.uploadFiles(file);
+
+        console.log(result);
+        return {
+          status: "success",
+          data: result,
+        };
+      } catch (error) {
+        console.error(error);
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Gagal mengunggah file",
+        });
+      }
+    }),
+};
+
+export type AppRouter = typeof appRouter;
+export type AppRouterClient = RouterClient<typeof appRouter>;
+
