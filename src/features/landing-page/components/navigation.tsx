@@ -4,6 +4,14 @@ import { LogOut, Menu, Shield, User, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 
 export function Navigation() {
@@ -56,18 +64,30 @@ export function Navigation() {
             {isPending && <p className="text-sm ">Loading...</p>}
             {!isPending && data?.user && (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-sm text-foreground">
-                  <User className="h-4 w-4" />
-                  <span>{data.user.name || data.user.email}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 bg-transparent"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Keluar</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center space-x-2 text-sm text-foreground py-2"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>{data.user.name || data.user.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Akun</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard">Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings">Pengaturan</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      Keluar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
             {!isPending && !data?.user && (
@@ -130,6 +150,24 @@ export function Navigation() {
               >
                 Kontak
               </Link>
+              {data?.user && (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2 text-foreground hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="block px-3 py-2 text-foreground hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Pengaturan
+                  </Link>
+                </>
+              )}
               {data?.user ? (
                 <div className="px-3 py-2 space-y-2">
                   <div className="flex items-center space-x-2 text-sm text-foreground py-2">

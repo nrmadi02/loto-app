@@ -14,7 +14,7 @@ export default async function AuthLayout({
 
   if (data?.session && data?.user) {
     console.log("User already logged in");
-    return redirect("/");
+    return redirect("/dashboard");
   }
 
   return children;
