@@ -221,6 +221,7 @@ export default function ProcessForm() {
                     spec={spec}
                     machine={machine}
                     onSubmit={doSubmit}
+                    isLoading={transitionMutation.isPending}
                   />
                 )}
                 {!transition && (
