@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -101,10 +101,12 @@ export default function DynamicForm({
   spec,
   machine,
   onSubmit,
+  isLoading,
 }: {
   spec: FormSpec;
   machine: typeof SAMPLE_MACHINE;
   onSubmit: (payload: Record<string, any>) => void;
+  isLoading?: boolean;
 }) {
   const [values, setValues] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<string[]>([]);
@@ -170,8 +172,13 @@ export default function DynamicForm({
       </AnimatePresence>
 
       <div className="flex justify-end">
-        <Button type="submit" className="gap-2">
-          <ClipboardCheck className="h-4 w-4" /> Simpan & Terapkan Status
+        <Button type="submit" className="gap-2" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <ClipboardCheck className="h-4 w-4" />
+          )}
+          Simpan & Terapkan Status
         </Button>
       </div>
     </form>
